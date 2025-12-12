@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  nativescript:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nativescript-dev
+    volumes:
+      - .:/app
+      - ~/.android:/root/.android
+      - ~/.ssh:/root/.ssh:ro
+      - nativescript_node_modules:/app/node_modules
+    working_dir: /app
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - PATH=/opt/android-sdk/cmdline-tools/tools/bin:/opt/android-sdk/platform-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    ports:
+      - "8081:8081"     # NativeScript Preview
+      - "5000:5000"     # Debug DevTools
+    networks:
+      - nativescript-network
+    healthcheck:
+      test: ["CMD", "which", "ns"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  nativescript_node_modules:
+    driver: local
+
+networks:
+  nativescript-network:
+    driver: bridge
