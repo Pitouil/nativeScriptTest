@@ -208,20 +208,37 @@ version: ## Affiche les versions (dans Docker)
 # 🔄 WORKFLOWS COMPLETS (DOCKER-FIRST)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-quick-start: ## Quick start 100% Docker: up + install + create
-	@make up
-	@make install-docker
-	@make create-docker APP_NAME=$(APP_NAME)
+init: ## ⚙️  Setup initial (à faire une fois): build Docker + create + install
+	@echo "$(BLUE)╔════════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(BLUE)║              ⚙️  NativeScript Initial Setup               ║$(NC)"
+	@echo "$(BLUE)╚════════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
-	@echo "$(GREEN)✓ Quick start terminé !$(NC)"
-	@echo "$(YELLOW)Prochaines commandes:$(NC)"
-	@echo "  cd $(APP_NAME)"
-	@echo "  make preview"
+	@echo "$(YELLOW)1/4 Build Docker image...$(NC)"
+	docker compose build
+	@echo ""
+	@echo "$(YELLOW)2/4 Démarrage des containers...$(NC)"
+	docker compose up -d
+	@echo ""
+	@echo "$(YELLOW)3/4 Création de l'app $(APP_NAME)...$(NC)"
+	docker compose exec nativescript ns create $(APP_NAME) --template @nativescript-vue/template-blank@latest
+	@echo ""
+	@echo "$(YELLOW)4/4 Installation des dépendances npm...$(NC)"
+	docker compose exec nativescript bash -c "cd $(APP_NAME) && npm install"
+	@echo ""
+	@echo "$(GREEN)✓ Setup terminé !$(NC)"
+	@echo ""
+	@echo "$(BLUE)Prochaines étapes:$(NC)"
+	@echo "  $(YELLOW)cd $(APP_NAME)$(NC)"
+	@echo "  $(YELLOW)make shell$(NC)                      # Entre dans le container"
+	@echo "  $(YELLOW)ns preview$(NC)                      # Lance Preview"
+	@echo ""
+
+quick-start: ## Quick start 100% Docker: up + create + install (usage: make quick-start APP_NAME=MonApp)
+	@make init APP_NAME=$(APP_NAME)
 
 dev: up ## Démarrage dev complet: Docker + Preview
 	@echo "$(GREEN)✓ Docker est démarré$(NC)"
-	@echo "$(YELLOW)→ Utilisons Preview pour le dev...$(NC)"
-	@make preview
+	@echo "$(YELLOW)→ Entrez avec 'make shell' puis exécutez ns preview$(NC)"
 
 release: up ## Build release complète (Android + iOS)
 	@echo "$(BLUE)→ Build de la release...$(NC)"
@@ -233,8 +250,9 @@ release: up ## Build release complète (Android + iOS)
 # 📝 COMMANDES AVANCÉES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-rebuild: clean-docker up install-docker ## Rebuild complet (clean + up + install)
+rebuild: clean-docker up ## Rebuild complet (clean + up)
 	@echo "$(GREEN)✓ Rebuild terminé$(NC)"
+	@echo "$(YELLOW)Utilisez:$(NC) make init APP_NAME=MonApp"
 
 shell-root: ## Entre dans le container en tant que root
 	docker compose exec -u root nativescript bash
@@ -259,30 +277,4 @@ network: ## Affiche les infos réseau Docker
 	@echo "$(BLUE)→ Réseau Docker...$(NC)"
 	docker network inspect nativescript-dev_nativescript-network
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 🎯 SETUP INITIAL (A FAIRE UNE SEULE FOIS)
-# ═══════════════════════════════════════════════════════════════════════════════
-
 .DEFAULT_GOAL := help
-
-init: ## ⚙️  Setup initial (à faire une fois): build Docker + install
-	@echo "$(BLUE)╔════════════════════════════════════════════════════════════╗$(NC)"
-	@echo "$(BLUE)║              ⚙️  NativeScript Initial Setup               ║$(NC)"
-	@echo "$(BLUE)╚════════════════════════════════════════════════════════════╝$(NC)"
-	@echo ""
-	@echo "$(YELLOW)1/3 Build Docker image...$(NC)"
-	docker compose build
-	@echo ""
-	@echo "$(YELLOW)2/3 Démarrage des containers...$(NC)"
-	docker compose up -d
-	@echo ""
-	@echo "$(YELLOW)3/3 Installation des dépendances...$(NC)"
-	docker compose exec nativescript npm install
-	@echo ""
-	@echo "$(GREEN)✓ Setup terminé !$(NC)"
-	@echo ""
-	@echo "$(BLUE)Prochaines étapes:$(NC)"
-	@echo "  $(YELLOW)make shell$(NC)              # Entre dans le container"
-	@echo "  $(YELLOW)ns create MonApp$(NC)        # Crée une nouvelle app"
-	@echo "  $(YELLOW)ns preview$(NC)              # Lance Preview"
-	@echo ""
